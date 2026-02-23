@@ -1,214 +1,158 @@
 # Vigility Analytics Dashboard
 
-An interactive full-stack product analytics dashboard that **visualizes its own usage**. Every interaction a user makes with the dashboard (changing a filter, clicking a chart bar) is tracked as an event and fed back into the visualizations.
+An interactive full-stack analytics dashboard that tracks and visualizes its own usage. Every time a user interacts with a filter or chart, that action is recorded and reflected in the analytics.
 
----
-
-## Live Demo
-
-> **URL**: _Deploy and add your URL here_  
-> **Demo Credentials**: `alice / password123`
+**Live Demo:** https://prod-analytics.vercel.app
+**Demo Login:** `alice / password123`
 
 ---
 
 ## Features
 
-- **JWT Authentication** — Register and login with hashed passwords
-- **Self-Tracking** — Every filter change and chart interaction fires a `POST /track` event
-- **Filter Persistence** — Selected filters (date range, age group, gender) are saved in cookies and restored on page refresh
-- **Bar Chart** — Horizontal bar chart showing total clicks per feature; clicking a bar drills into the line chart
-- **Line Chart** — Daily click trend for the selected feature (or all features)
-- **Stats Strip** — At-a-glance numbers: total events, features tracked, days with data, top feature
-- **Seeding** — Script to populate 5 demo users + 200 click events across 90 days
+- JWT authentication (register and login)
+- Tracks every dashboard interaction via `/track`
+- Filter by date, age group, and gender
+- Bar chart showing total clicks per feature
+- Line chart showing daily trends
+- Filter selections saved in cookies
+- Seeder script with demo users and realistic event data
 
 ---
 
-## Architecture
+## Tech Stack
+
+### Backend
+- Node.js
+- Express.js
+- SQLite3
+- JWT authentication
+- bcrypt password hashing
+
+### Frontend
+- React 18
+- Recharts (charts)
+- js-cookie (filter persistence)
+
+---
+
+## Project Structure
 
 ```
 analytics-dashboard/
-├── backend/          # Node.js + Express REST API
-│   ├── server.js     # Main app with all endpoints
-│   ├── db.js         # SQLite connection + schema init
-│   ├── auth.js       # JWT middleware + token generation
-│   ├── seed.js       # Database seeder (npm run seed)
-│   ├── .env.example
+│
+├── backend/
+│   ├── server.js       # All API endpoints
+│   ├── db.js           # SQLite3 connection + schema
+│   ├── auth.js         # JWT middleware
+│   ├── seed.js         # Demo data seeder
 │   └── package.json
 │
-└── frontend/         # React SPA
+└── frontend/
     ├── src/
-    │   ├── App.js         # Root + routing between auth and dashboard
-    │   ├── App.css        # All styles (dark theme, responsive)
-    │   ├── AuthContext.js # React context for user session
-    │   ├── api.js         # Fetch wrappers for all API calls
     │   ├── pages/
-    │   │   ├── AuthPage.js    # Login + Register form
-    │   │   └── Dashboard.js   # Main dashboard with charts + filters
-    │   └── index.js
+    │   │   ├── AuthPage.js     # Login + Register
+    │   │   └── Dashboard.js    # Charts + Filters
+    │   ├── api.js              # API fetch wrappers
+    │   ├── AuthContext.js      # Auth state
+    │   ├── App.js
+    │   └── App.css
     └── package.json
 ```
 
-### Technology Choices
-
-| Concern | Choice | Reason |
-|---|---|---|
-| Backend framework | **Express.js** | Minimal, fast, widely understood |
-| Database | **SQLite (better-sqlite3)** | Zero-config for dev; swap to PostgreSQL for production |
-| Auth | **JWT (jsonwebtoken)** | Stateless, easy to verify on every request |
-| Password hashing | **bcryptjs** | Industry standard, pure JS (no native deps) |
-| Frontend framework | **React 18** | Component model fits the dashboard well |
-| Charts | **Recharts** | Composable, well-maintained, works with Recharts' ResponsiveContainer |
-| Filter persistence | **js-cookie** | Tiny, no deps; stores last-used filters for 30 days |
-| Date helpers | **date-fns** | Tree-shakeable, functional API |
-
 ---
 
-## Local Development
+## Running Locally
 
-### Prerequisites
-- Node.js v18+
-- npm v9+
-
-### 1. Clone the repository
-
-```bash
-git clone <your-repo-url>
-cd analytics-dashboard
-```
-
-### 2. Set up the Backend
+### Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env   # Edit JWT_SECRET at minimum
-npm run seed           # Populate DB with demo data
-npm run dev            # Starts on http://localhost:4000
+cp .env.example .env
+npm run seed
+npm start
 ```
 
-**Environment variables** (`.env`):
-```
-PORT=4000
-JWT_SECRET=your-random-secret-here
-FRONTEND_URL=http://localhost:3000
-```
+Runs on: `http://localhost:4000`
 
-### 3. Set up the Frontend
+### Frontend
 
 ```bash
-cd ../frontend
+cd frontend
 npm install
-# Optional: set REACT_APP_API_URL if backend is not on port 4000
-npm start              # Starts on http://localhost:3000
+npm start
 ```
 
-> The `"proxy": "http://localhost:4000"` in frontend's `package.json` forwards API calls in dev automatically.
-
-### 4. Open the app
-
-Navigate to `http://localhost:3000` and log in with:
-- `alice / password123`
-- `bob / password123`
-- `charlie / password123`
-- `diana / password123`
-- `evan / password123`
+Runs on: `http://localhost:3000`
 
 ---
 
-## Seed Instructions
+## Demo Accounts
+
+| Username | Password    |
+|----------|-------------|
+| alice    | password123 |
+| bob      | password123 |
+| charlie  | password123 |
+| diana    | password123 |
+| evan     | password123 |
+
+---
+
+## Seeder
 
 ```bash
 cd backend
 npm run seed
 ```
 
-This script:
-1. Inserts 5 demo users (or skips if they already exist via `INSERT OR IGNORE`)
-2. Inserts **200 feature click events** randomly distributed across the last 90 days
-3. Weights feature usage realistically (`date_filter` is used most, `dashboard_refresh` least)
-
-Re-running the seeder is safe — it will not duplicate users, but will add another 200 click records.
+Creates:
+- 5 demo users
+- 200 feature click events spread across the last 90 days
 
 ---
 
-## API Reference
+## API Overview
 
-### `POST /register`
-```json
-{ "username": "alice", "password": "password123", "age": 25, "gender": "Female" }
-```
-Returns `{ token, user }`.
-
-### `POST /login`
-```json
-{ "username": "alice", "password": "password123" }
-```
-Returns `{ token, user }`.
-
-### `POST /track` _(requires Bearer token)_
-```json
-{ "feature_name": "date_filter" }
-```
-Returns the created record.
-
-### `GET /analytics` _(requires Bearer token)_
-Query params: `start_date`, `end_date`, `age` (`<18` | `18-40` | `>40`), `gender`, `feature`
-
-Returns:
-```json
-{
-  "bar_chart":  [{ "feature_name": "date_filter", "total_clicks": 87 }, ...],
-  "line_chart": [{ "date": "2025-01-01", "feature_name": "date_filter", "clicks": 5 }, ...],
-  "total_clicks": 312
-}
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/register` | No | Create a new account |
+| POST | `/login` | No | Login and receive JWT token |
+| POST | `/track` | Yes | Record a user interaction |
+| GET | `/analytics` | Yes | Fetch aggregated analytics data |
 
 ---
 
 ## Deployment
 
-### Backend → Render (recommended)
+**Backend:** Render  
+**Frontend:** Vercel
 
-1. Create a new **Web Service** on [Render](https://render.com)
-2. Set root directory to `backend/`
-3. Build command: `npm install`
-4. Start command: `node server.js`
-5. Add environment variables: `JWT_SECRET`, `FRONTEND_URL`, `PORT`
-6. For persistence across restarts, upgrade to a **PostgreSQL** add-on (see PostgreSQL note below)
+### Environment Variables
 
-### Frontend → Vercel or Netlify
+Backend (`.env`):
+```
+PORT=4000
+JWT_SECRET=secret
+FRONTEND_URL=https://prod-analytics.vercel.app
+DB_PATH=/var/data/analytics.db
+```
 
-1. Set root directory to `frontend/`
-2. Build command: `npm run build`
-3. Output directory: `build`
-4. Add environment variable: `REACT_APP_API_URL=https://your-backend.onrender.com`
+Frontend (`.env`):
+```
+REACT_APP_API_URL=https://prod-analytics-9s0q.onrender.com
+```
 
-### PostgreSQL Note
-
-The backend is written for SQLite but can be switched to PostgreSQL by:
-1. Installing `pg` and `knex`: `npm install pg knex`
-2. Replacing `better-sqlite3` calls in `db.js` and `server.js` with parameterized Knex queries
-3. Setting `DATABASE_URL` environment variable on Render's managed Postgres
+> **Note:** On Render, add a Persistent Disk mounted at `/var/data` so the SQLite3 file survives restarts.
+Render may take a while responding to the first requests as it goes to sleep if idle for long time. please be patient.
 
 ---
 
-## Scalability Essay
+## Scalability (1M events/min)
 
-> **If this dashboard needed to handle 1 million write events per minute, how would you change the backend architecture?**
+At large scale, direct DB writes would fail. The backend should publish events to a message queue like Kafka, and background workers would batch-insert into an analytics database such as ClickHouse. Multiple API instances behind a load balancer and Redis caching would ensure scalability and fast reads.
 
-At 1M writes/min (~16,700/sec), a single Express + SQLite/PostgreSQL instance would immediately become the bottleneck. The first change would be to decouple the write path from the read path entirely: instead of writing directly to PostgreSQL on every `POST /track`, the API would publish each event to a **message queue** (Apache Kafka or AWS Kinesis). The `/track` endpoint becomes near-instant — it just produces a Kafka message and returns 201. A separate fleet of **consumer workers** reads from Kafka and bulk-inserts events into the database in efficient batches (e.g., 1,000 rows at a time every 500ms), dramatically reducing write amplification. The PostgreSQL database itself would be replaced or supplemented with a **columnar analytics store** like ClickHouse or AWS Redshift, which is purpose-built for high-throughput append workloads and aggregation queries. The `/analytics` read endpoint would query this OLAP store. For horizontal scaling, multiple stateless Express API instances would run behind a **load balancer** (AWS ALB / NGINX), all publishing to the same Kafka topic. Finally, heavily-repeated analytics queries (e.g., last-24h totals) would be cached in **Redis** with a short TTL (30–60 seconds) to avoid hammering the OLAP store on every dashboard refresh.
+This ensures high throughput, reliability, and scalability.
 
----
-
-## Evaluation Checklist
-
-- [x] **Auth** — JWT register + login, protected endpoints
-- [x] **Filters work** — All filter combinations hit SQL `WHERE` clauses correctly
-- [x] **Filter persistence** — Saved to cookies, restored on page refresh
-- [x] **Bar chart** — Feature usage with click-through to drill into line chart
-- [x] **Line chart** — Daily trend, updates when bar is clicked
-- [x] **Self-tracking** — Every filter/chart interaction fires `POST /track`
-- [x] **Seeding** — `npm run seed` produces 200 realistic events across 5 users
-- [x] **Responsive** — Grid collapses gracefully on mobile
-- [x] **Code quality** — Separation of concerns: db, auth, routes, React components, API layer
-- [x] **SQL aggregations** — `COUNT(*) GROUP BY` for bar; `COUNT(*) GROUP BY DATE` for line
+## Author
+Hamza Gandhi
