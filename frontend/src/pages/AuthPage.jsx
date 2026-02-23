@@ -33,7 +33,7 @@ export default function AuthPage() {
     <div className="auth-wrapper">
       <div className="auth-card">
         <div className="auth-logo">
-          <span className="logo-icon">[]</span>
+          <span className="logo-icon" aria-hidden="true" />
           <span className="logo-text">Vigility</span>
         </div>
 
