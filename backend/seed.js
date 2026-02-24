@@ -127,11 +127,16 @@ async function seed() {
 // Export function
 module.exports = seed;
 
-// Only run automatically if executed directly
 if (require.main === module) {
   seed()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
+    .then(() => {
+      console.log("Seed finished");
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("Seed failed:", err);
+      process.exit(1);
+    });
 }
 
 seed();

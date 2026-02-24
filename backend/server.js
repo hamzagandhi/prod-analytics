@@ -44,6 +44,7 @@ function allAsync(db, sql, params = []) {
   });
 }
 
+const seed = require("./seed");
 async function seedIfEmpty() {
   try {
     const db = getDb();
@@ -57,7 +58,7 @@ async function seedIfEmpty() {
       console.log("Database empty. Running seed...");
 
       // run seed script
-      const seed = require("./seed");
+      
       await seed();
 
       console.log("Seeding complete");
