@@ -139,4 +139,3 @@ if (require.main === module) {
     });
 }
 
-seed();
