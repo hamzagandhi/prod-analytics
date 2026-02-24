@@ -44,6 +44,31 @@ function allAsync(db, sql, params = []) {
   });
 }
 
+async function seedIfEmpty() {
+  try {
+    const db = getDb();
+
+    const row = await getAsync(
+      db,
+      "SELECT COUNT(*) as count FROM users"
+    );
+
+    if (!row || row.count === 0) {
+      console.log("Database empty. Running seed...");
+
+      // run seed script
+      await require("./seed");
+
+      console.log("Seeding complete");
+    } else {
+      console.log("Database already seeded");
+    }
+
+  } catch (err) {
+    console.error("Seed check failed:", err);
+  }
+}
+
 function isValidIsoDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -289,7 +314,8 @@ app.get('/me', authMiddleware, (req, res) => {
   res.json({ user: req.user });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT,async () => {
   console.log(`Analytics API running on http://localhost:${PORT}`);
   getDb();
+  await seedIfEmpty();
 });
