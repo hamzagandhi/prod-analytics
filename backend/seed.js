@@ -117,12 +117,21 @@ async function seed() {
     console.log('\nDemo login credentials:');
     USERS.forEach((u) => console.log(`  ${u.username} / ${u.password}`));
 
-    process.exit(0);
   } catch (err) {
     await run(db, 'ROLLBACK');
     console.error('Seed failed:', err);
-    process.exit(1);
+    throw err;
   }
+}
+
+// Export function
+module.exports = seed;
+
+// Only run automatically if executed directly
+if (require.main === module) {
+  seed()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
 }
 
 seed();

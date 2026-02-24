@@ -57,7 +57,8 @@ async function seedIfEmpty() {
       console.log("Database empty. Running seed...");
 
       // run seed script
-      await require("./seed");
+      const seed = require("./seed");
+      await seed();
 
       console.log("Seeding complete");
     } else {
